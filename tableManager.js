@@ -124,6 +124,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
         var currentPage = 0;
         var numPerPage =
             pagination !== true && showrows_option !== true ? rows.length : 5;
+        var numOfPages = options.numOfPages !== undefined && options.numOfPages > 0 ? options.numOfPages : 5;
 
         /**
         Set default show rows list or set if option is set
@@ -158,6 +159,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
             "showrows",
             "vocabulary",
             "disableFilterBy",
+            "numOfPages"
         ];
 
         // debug
@@ -364,7 +366,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
                 });
 
                 // Filter on typing selecting column by select #filter_by
-                $("input#filter_input").on("input", function () {
+                $("input#filter_input").on("keyup", function () {
                     var val = $.trim($(this).val())
                         .replace(/ +/g, " ")
                         .toLowerCase();
@@ -382,6 +384,8 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
                             return !~text.indexOf(val);
                         })
                         .hide();
+                        
+                    if(val == '') paginate();
                 });
             }
 
@@ -675,6 +679,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
             $(".pagecontroller-num").eq(0).addClass("currentPage");
             paginate(currentPage, numPerPage);
             pagecontrollersClick();
+            filterPages();
         }
 
         /**
@@ -698,7 +703,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
         /**
         Page controllers append: generate page controllers and append them on bottom of table
         **/
-        function appendPageControllers() {
+        function appendPageControllers(nPages) {
             // reset div
             $("#pagesControllers").html("");
             // First
@@ -718,7 +723,7 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
                 })
             );
             // Numbers
-            for (i = 1; i <= numPages; i++) {
+            for (i = 1; i <= nPages; i++) {
                 $("#pagesControllers").append(
                     $("<button>", {
                         value: i,
@@ -776,7 +781,29 @@ Important! Do not edit this plugin if you're not sure you're doing it right. The
                 $(".pagecontroller-num")
                     .eq(currentPage)
                     .addClass("currentPage");
+
+                filterPages();
             });
+        }
+
+        function filterPages() {
+            $(".pagecontroller-num")
+                .hide()    
+                .filter(function(i, el) {
+                    let mid = Math.ceil(numOfPages / 2);
+                    if (currentPage < mid) {
+                        if(i < numOfPages) return true;
+                    } else if(currentPage > (numPages - (numOfPages - 1))) {
+                        if(i >= numPages - numOfPages) return true;
+                    } else {
+                        if(numOfPages % 2 == 0) {
+                            if(i >= currentPage - mid && i < currentPage + mid) return true;
+                        } else {
+                            if(i > currentPage - mid && i < currentPage + mid) return true;
+                        }
+                    }
+                })
+                .show();
         }
 
         /**
